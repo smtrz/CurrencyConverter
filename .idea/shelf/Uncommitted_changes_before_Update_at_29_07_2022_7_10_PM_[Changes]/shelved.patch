@@ -1,0 +1,195 @@
+Index: app/src/main/java/com/tahir/shortlyapp/db/LinksDao.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tahir.shortlyapp.db\r\n\r\nimport androidx.lifecycle.LiveData\r\nimport androidx.room.Dao\r\nimport androidx.room.Insert\r\nimport androidx.room.OnConflictStrategy\r\nimport androidx.room.Query\r\n\r\n@Dao\r\ninterface LinksDao {\r\n    // selects all the links data and order by id\r\n    @Query(\"SELECT * FROM links order by id DESC\")\r\n    fun getAllLinks(): LiveData<List<Links>>\r\n\r\n    // handles the data and handles the conflict by replacing\r\n    @Insert(onConflict = OnConflictStrategy.REPLACE)\r\n    suspend fun insertLink(link: Links): Long\r\n\r\n    // delete the link data from id\r\n    @Query(\"DELETE FROM links WHERE id = :id\")\r\n    fun deleteLink(id: Int): Int\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/tahir/shortlyapp/db/LinksDao.kt b/app/src/main/java/com/tahir/shortlyapp/db/LinksDao.kt
+--- a/app/src/main/java/com/tahir/shortlyapp/db/LinksDao.kt	(revision f6aa4ae3730bd99be7c1ba61f28e77bc0e92e819)
++++ b/app/src/main/java/com/tahir/shortlyapp/db/LinksDao.kt	(date 1658911923052)
+@@ -18,5 +18,5 @@
+ 
+     // delete the link data from id
+     @Query("DELETE FROM links WHERE id = :id")
+-    fun deleteLink(id: Int): Int
++   suspend fun deleteLink(id: Int): Int
+ }
+Index: app/src/main/java/com/tahir/shortlyapp/repo/Repository.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tahir.shortlyapp.repo\r\n\r\nimport androidx.lifecycle.LiveData\r\nimport com.tahir.shortlyapp.db.Links\r\nimport com.tahir.shortlyapp.generics.BaseApiResponse\r\nimport com.tahir.shortlyapp.generics.NetworkResult\r\nimport com.tahir.shortlyapp.models.Shorten\r\nimport dagger.hilt.android.scopes.ActivityRetainedScoped\r\nimport javax.inject.Inject\r\nimport kotlinx.coroutines.Dispatchers\r\nimport kotlinx.coroutines.flow.Flow\r\nimport kotlinx.coroutines.flow.flow\r\nimport kotlinx.coroutines.flow.flowOn\r\n\r\n/**\r\n * Repository is the Single Source of truth that contains instance of both local and remote data\r\n * source.\r\n * @constructor remoteDataSource , localDataSource (using construction injection)\r\n */\r\n@ActivityRetainedScoped\r\nclass Repository\r\n@Inject\r\nconstructor(\r\n    private val remoteDataSource: RemoteDataSource,\r\n    private val localDataSource: LocalDataSource\r\n) : BaseApiResponse() {\r\n    /**\r\n     * calls API for url shortening, emits data on IO Dispatcher.\r\n     * @param url\r\n     * @return Flow<NetworkResult<Shorten>>\r\n     */\r\n    suspend fun shortenUrl(url: String): Flow<NetworkResult<Shorten>> {\r\n        return flow {\r\n            emit(NetworkResult.Loading())\r\n            emit(safeApiCall { remoteDataSource.shortenUrl(url) })\r\n        }\r\n            .flowOn(Dispatchers.IO)\r\n    }\r\n\r\n    /**\r\n     * gets all links saved in database table from localdatasource.\r\n     * @return LiveData<List<Links>>\r\n     */\r\n    fun getAllLinks(): LiveData<List<Links>> {\r\n        return localDataSource.getallLinks()\r\n    }\r\n\r\n    /**\r\n     * delete the link record from database table from id\r\n     * @param id\r\n     * @return int\r\n     */\r\n    suspend fun deleteLink(id: Int): Int {\r\n        return localDataSource.deleteLink(id)\r\n    }\r\n\r\n    /**\r\n     * insert the link object into the database table.\r\n     * @param links\r\n     * @return Long\r\n     */\r\n    suspend fun insertLink(links: Links): Long {\r\n        return localDataSource.insertLink(links)\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/tahir/shortlyapp/repo/Repository.kt b/app/src/main/java/com/tahir/shortlyapp/repo/Repository.kt
+--- a/app/src/main/java/com/tahir/shortlyapp/repo/Repository.kt	(revision f6aa4ae3730bd99be7c1ba61f28e77bc0e92e819)
++++ b/app/src/main/java/com/tahir/shortlyapp/repo/Repository.kt	(date 1658911964508)
+@@ -6,11 +6,11 @@
+ import com.tahir.shortlyapp.generics.NetworkResult
+ import com.tahir.shortlyapp.models.Shorten
+ import dagger.hilt.android.scopes.ActivityRetainedScoped
+-import javax.inject.Inject
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.flow.Flow
+ import kotlinx.coroutines.flow.flow
+ import kotlinx.coroutines.flow.flowOn
++import javax.inject.Inject
+ 
+ /**
+  * Repository is the Single Source of truth that contains instance of both local and remote data
+Index: app/src/main/java/com/tahir/shortlyapp/repo/LocalDataSource.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tahir.shortlyapp.repo\r\n\r\nimport com.tahir.shortlyapp.db.Links\r\nimport com.tahir.shortlyapp.db.LinksDao\r\nimport javax.inject.Inject\r\n\r\n/**a\r\n * holds all the local database operations\r\n * @constructor injection linkDao\r\n */\r\nclass LocalDataSource @Inject constructor(private val linksDao: LinksDao) {\r\n\r\n    fun getallLinks() = linksDao.getAllLinks()\r\n\r\n    suspend fun insertLink(links: Links) = linksDao.insertLink(links)\r\n\r\n    suspend fun deleteLink(id: Int) = linksDao.deleteLink(id)\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/tahir/shortlyapp/repo/LocalDataSource.kt b/app/src/main/java/com/tahir/shortlyapp/repo/LocalDataSource.kt
+--- a/app/src/main/java/com/tahir/shortlyapp/repo/LocalDataSource.kt	(revision f6aa4ae3730bd99be7c1ba61f28e77bc0e92e819)
++++ b/app/src/main/java/com/tahir/shortlyapp/repo/LocalDataSource.kt	(date 1658911923037)
+@@ -14,5 +14,5 @@
+ 
+     suspend fun insertLink(links: Links) = linksDao.insertLink(links)
+ 
+-    suspend fun deleteLink(id: Int) = linksDao.deleteLink(id)
++   suspend fun deleteLink(id: Int) = linksDao.deleteLink(id)
+ }
+Index: app/src/androidTest/java/com/tahir/shortlyapp/ExampleInstrumentedTest.kt
+===================================================================
+diff --git a/app/src/androidTest/java/com/tahir/shortlyapp/ExampleInstrumentedTest.kt b/app/src/androidTest/java/com/tahir/shortlyapp/ExampleInstrumentedTest.kt
+deleted file mode 100644
+--- a/app/src/androidTest/java/com/tahir/shortlyapp/ExampleInstrumentedTest.kt	(revision f6aa4ae3730bd99be7c1ba61f28e77bc0e92e819)
++++ /dev/null	(revision f6aa4ae3730bd99be7c1ba61f28e77bc0e92e819)
+@@ -1,24 +0,0 @@
+-package com.tahir.shortlyapp
+-
+-import androidx.test.platform.app.InstrumentationRegistry
+-import androidx.test.runner.AndroidJUnit4
+-
+-import org.junit.Test
+-import org.junit.runner.RunWith
+-
+-import org.junit.Assert.*
+-
+-/**
+- * Instrumented test, which will execute on an Android device.
+- *
+- * See [testing documentation](http://d.android.com/tools/testing).
+- */
+-@RunWith(AndroidJUnit4::class)
+-class ExampleInstrumentedTest {
+-    @Test
+-    fun useAppContext() {
+-        // Context of the app under test.
+-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+-        assertEquals("com.tahir.shortlyapp", appContext.packageName)
+-    }
+-}
+\ No newline at end of file
+Index: .idea/gradle.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"GradleSettings\">\r\n    <option name=\"linkedExternalProjectsSettings\">\r\n      <GradleProjectSettings>\r\n        <option name=\"testRunner\" value=\"GRADLE\" />\r\n        <option name=\"distributionType\" value=\"DEFAULT_WRAPPED\" />\r\n        <option name=\"externalProjectPath\" value=\"$PROJECT_DIR$\" />\r\n        <option name=\"modules\">\r\n          <set>\r\n            <option value=\"$PROJECT_DIR$\" />\r\n            <option value=\"$PROJECT_DIR$/app\" />\r\n          </set>\r\n        </option>\r\n      </GradleProjectSettings>\r\n    </option>\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/gradle.xml b/.idea/gradle.xml
+--- a/.idea/gradle.xml	(revision f6aa4ae3730bd99be7c1ba61f28e77bc0e92e819)
++++ b/.idea/gradle.xml	(date 1658299758801)
+@@ -1,5 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
++  <component name="GradleMigrationSettings" migrationVersion="1" />
+   <component name="GradleSettings">
+     <option name="linkedExternalProjectsSettings">
+       <GradleProjectSettings>
+Index: .idea/jarRepositories.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/jarRepositories.xml b/.idea/jarRepositories.xml
+new file mode 100644
+--- /dev/null	(date 1658227228452)
++++ b/.idea/jarRepositories.xml	(date 1658227228452)
+@@ -0,0 +1,25 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="RemoteRepositoriesConfiguration">
++    <remote-repository>
++      <option name="id" value="central" />
++      <option name="name" value="Maven Central repository" />
++      <option name="url" value="https://repo1.maven.org/maven2" />
++    </remote-repository>
++    <remote-repository>
++      <option name="id" value="jboss.community" />
++      <option name="name" value="JBoss Community repository" />
++      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
++    </remote-repository>
++    <remote-repository>
++      <option name="id" value="MavenRepo" />
++      <option name="name" value="MavenRepo" />
++      <option name="url" value="https://repo.maven.apache.org/maven2/" />
++    </remote-repository>
++    <remote-repository>
++      <option name="id" value="Google" />
++      <option name="name" value="Google" />
++      <option name="url" value="https://dl.google.com/dl/android/maven2/" />
++    </remote-repository>
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/deploymentTargetDropDown.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/deploymentTargetDropDown.xml b/.idea/deploymentTargetDropDown.xml
+new file mode 100644
+--- /dev/null	(date 1658507124428)
++++ b/.idea/deploymentTargetDropDown.xml	(date 1658507124428)
+@@ -0,0 +1,17 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="deploymentTargetDropDown">
++    <targetSelectedWithDropDown>
++      <Target>
++        <type value="QUICK_BOOT_TARGET" />
++        <deviceKey>
++          <Key>
++            <type value="VIRTUAL_DEVICE_PATH" />
++            <value value="C:\Users\tahir\.android\avd\Nexus_5_API_32.avd" />
++          </Key>
++        </deviceKey>
++      </Target>
++    </targetSelectedWithDropDown>
++    <timeTargetWasSelectedWithDropDown value="2022-07-22T16:24:15.911238200Z" />
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_11\" default=\"true\" project-jdk-name=\"Android Studio default JDK\" project-jdk-type=\"JavaSDK\">\r\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\r\n  </component>\r\n  <component name=\"ProjectType\">\r\n    <option name=\"id\" value=\"Android\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision f6aa4ae3730bd99be7c1ba61f28e77bc0e92e819)
++++ b/.idea/misc.xml	(date 1658507376663)
+@@ -1,5 +1,14 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
++  <component name="DesignSurface">
++    <option name="filePathToZoomLevelMap">
++      <map>
++        <entry key="..\:/Users/tahir/StudioProjects/shortly-app-sofcvz/app/src/main/res/layout/activity_main.xml" value="0.264" />
++        <entry key="..\:/Users/tahir/StudioProjects/shortly-app-sofcvz/app/src/main/res/layout/activity_main_1.xml" value="0.264" />
++        <entry key="..\:/Users/tahir/StudioProjects/shortly-app-sofcvz/app/src/main/res/layout/shorturl_item.xml" value="0.2647702407002188" />
++      </map>
++    </option>
++  </component>
+   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+     <output url="file://$PROJECT_DIR$/build/classes" />
+   </component>

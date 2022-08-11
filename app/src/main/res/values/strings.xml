@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Currency Converter</string>
+    <string name="tag_line">No Data Found !</string>
+    <string name="tag_line_desc">Enter the amount you want to convert.</string>
+    <string name="edittext_hint">Please chose currency</string>
+    <string name="edittext_amount">Enter amount</string>
+    <string name="button_text">CONVERT</string>
+
+</resources>
